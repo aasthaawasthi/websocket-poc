@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WebSocket Chat</title>
+</head>
+
+<body>
+    <h2>WebSocket Chat</h2>
+
+    <input id="message" type="text" placeholder="Enter message" />
+    <button id="sendBtn">Send</button>
+
+    <ul id="messages"></ul>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8080');
+
+        const messageInput = document.getElementById('message');
+        const messageList = document.getElementById('messages');
+        const sendBtn = document.getElementById('sendBtn');
+
+        ws.onmessage = ({ data }) => {
+            const li = document.createElement('li');
+            li.textContent = data;
+            messageList.appendChild(li);
+        };
+
+        const sendMessage = () => {
+            if (!messageInput.value.trim()) return;
+            ws.send(messageInput.value);
+            messageInput.value = '';
+        };
+
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Send on enter key
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+
+</html>
