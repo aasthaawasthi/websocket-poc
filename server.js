@@ -1,30 +1,43 @@
-import { WebSocketServer } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
+import Redis from 'ioredis';
 
-const PORT = 8080;
-const wss = new WebSocketServer({port: PORT});
+const PORT = process.env.PORT || 3010;
+
+// Redis setup
+const pub = new Redis();
+const sub = new Redis();
+
+const wss = new WebSocketServer({ port: PORT });
 
 // Using Set instead of array (better for add/remove)
 const clients = new Set();
 
 wss.on('connection', (ws) => {
-    console.log('New client connected');
+    console.log(`✅ Client connected on ${PORT}`);
     clients.add(ws);
 
-    ws.on('message', (message) =>{
+    ws.on('message', (message) => {
         const msg = message.toString();
-        console.log(`Received: ${msg}`);
 
-        // Broadcast to all clients
-        clients.forEach((client) => {
-            if(client.readyState === ws.OPEN){
-                client.send(msg);
-            }
-        });
+        // Publish to redis
+        pub.publish("chat", msg);
     });
 
-    ws.on('close', ()=>{
+    ws.on('close', () => {
+        clients.delete(ws);
         console.log('Client disconnected');
-        client.delete(ws);
+    });
+});
+
+// Subscribe to Redis
+sub.subscribe("chat");
+
+sub.on("message", (_, message) => {
+    // Broadcast to all clients connected to THIS server
+    clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(message);
+        }
     });
 });
 
