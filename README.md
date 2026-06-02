@@ -1,125 +1,220 @@
-🚀 WebSocket Real-Time Chat (POC)
+# 🚀 Scalable WebSocket Real-Time Chat (POC)
 
-A simple Proof of Concept (POC) demonstrating real-time bidirectional communication using WebSockets. This project showcases how clients and servers can maintain a persistent connection and exchange messages instantly.
+A production-inspired Proof of Concept (POC) demonstrating **real-time bidirectional communication at scale** using WebSockets, multiple Node.js servers, Redis Pub/Sub, and NGINX load balancing.
 
-✨ What Makes This Interesting?
-1. ⚡ Instant communication (no polling)
-2. 🔄 Persistent connection
-3. 📡 True bidirectional data flow
-4. 🧠 Built to understand system design concepts
+This project evolves from a basic WebSocket chat into a **horizontally scalable real-time system**, similar to architectures used in real-world applications.
 
-🧠 Architecture Diagram
-        ┌──────────────┐
-        │   Client 1   │
-        └──────┬───────┘
+---
+
+## ✨ What Makes This Interesting?
+
+* ⚡ Instant real-time communication (no polling)
+* 🔄 Persistent WebSocket connections
+* 📡 True bidirectional data flow
+* ⚖️ Load balancing across multiple servers
+* 🔁 Cross-server communication using Redis Pub/Sub
+* 🧠 Designed to understand real-world system design
+
+---
+
+## 🧠 Architecture Diagram
+
+```
+        Clients (Browser Tabs)
+                │
+                ▼
+        ┌──────────────────┐
+        │     NGINX        │
+        │ Load Balancer    │
+        └──────┬───────────┘
                │
-        ┌──────▼───────┐
-        │              │
-        │  WebSocket   │
-        │   Server     │
-        │  (Node.js)   │
-        │              │
-        └──────▲───────┘
-               │
-        ┌──────┴───────┐
-        │   Client 2   │
-        └──────────────┘
+    ┌──────────┼──────────┐
+    ▼          ▼          ▼
+Server 1    Server 2    Server 3
+(8081)      (8082)      (8083)
+    │          │          │
+    └──────┬───┴───┬──────┘
+           ▼       ▼
+        Redis Pub/Sub
+```
 
-   🔁 All clients connected via persistent TCP connection
-   📢 Server broadcasts messages to all clients
+🔁 Messages are shared across servers via Redis
+📢 Each server broadcasts to its connected clients
 
-⚙️ How It Works
-1. Client → HTTP Request (Handshake)
-2. Server → Upgrade to WebSocket
-3. Connection becomes persistent (TCP)
-4. Client ↔ Server exchange messages anytime
-5. Server broadcasts messages to all clients
+---
 
-⚡ Features
-1. 🔄 Real-time messaging
-2. 🔌 Persistent WebSocket connection
-3. 📡 Bidirectional communication (client ↔ server)
-4. 👥 Multiple client support (broadcasting)
-5. 🧠 Lightweight and easy to understand
-6. ⚡ Low latency communication
+## ⚙️ How It Works
 
-🛠️ Tech Stack
-1. Backend: Node.js + WebSocket (ws library)
-2. Frontend: HTML + JavaScript
-3. Protocol: WebSockets (over TCP)
+1. Client initiates WebSocket handshake via NGINX
+2. NGINX forwards connection to one of the backend servers
+3. WebSocket connection is established (persistent TCP)
+4. Client sends message → server publishes to Redis
+5. Redis broadcasts message to all servers
+6. Each server sends message to its connected clients
 
-📁 Project Structure
+---
+
+## ⚡ Features
+
+* 💬 Real-time messaging
+* 🔌 Persistent WebSocket connections
+* ⚖️ Load balancing via NGINX
+* 🔁 Cross-server communication (Redis Pub/Sub)
+* 👥 Multi-client, multi-server broadcasting
+* ⚡ Low latency communication
+
+---
+
+## 🛠️ Tech Stack
+
+* **Backend**: Node.js + ws (WebSocket library)
+* **Frontend**: HTML + JavaScript
+* **Load Balancer**: NGINX
+* **Message Broker**: Redis (Pub/Sub)
+* **Protocol**: WebSockets (over TCP)
+
+---
+
+## 📁 Project Structure
+
+```
 websocket-poc/
- ├── server.js        # WebSocket server
- ├── client.html      # Simple frontend client
+ ├── server.js        # WebSocket server (with Redis Pub/Sub)
+ ├── client.html      # Frontend client
+ ├── nginx.conf       # Load balancer config
  └── package.json
+```
 
-⚙️ Setup & Installation
-1. Clone the repository:
+---
+
+## ⚙️ Setup & Installation
+
+### 1️⃣ Clone the repository
+
+```bash
 git clone https://github.com/your-username/websocket-poc.git
-cd websocket-poc 
+cd websocket-poc
+```
 
-2. Install dependencies:
+---
+
+### 2️⃣ Install dependencies
+
+```bash
 npm install
+```
 
-3. Start the server:
-node server.js
+---
 
-▶️ How to Run
-1. Open client.html in your browser
-2. Open it in multiple tabs/windows
-3. Send messages and see real-time updates
+### 3️⃣ Start Redis
 
-🔍 How It Works
-1. Client initiates a WebSocket handshake over HTTP
-2. Connection upgrades to WebSocket protocol
-3. A persistent TCP connection is established
-4. Clients and server exchange messages in real-time
-5. Server broadcasts messages to all connected clients
+```bash
+redis-server
+```
 
-📊 When to Use WebSockets
+---
+
+### 4️⃣ Start Multiple WebSocket Servers
+
+```bash
+PORT=8081 node server.js
+PORT=8082 node server.js
+PORT=8083 node server.js
+```
+
+---
+
+### 5️⃣ Start NGINX
+
+```bash
+nginx -c /path/to/nginx.conf
+```
+
+---
+
+## ▶️ How to Run
+
+1. Open `client.html` in browser
+2. Open multiple tabs/windows
+3. Send messages and observe real-time updates
+4. Messages will sync across all tabs (even across different servers)
+
+---
+
+## 🔍 What to Observe (Proof of Scaling)
+
+* Different clients connect to different servers
+* Messages are received across all clients regardless of server
+* Killing one server does not break the system
+* Load is distributed across servers
+
+---
+
+## 📊 When to Use WebSockets
 
 ✅ Use when:
-1. Real-time communication required
-2. High-frequency updates
-3. Bidirectional data flow
+
+* Real-time communication is required
+* High-frequency updates
+* Bidirectional communication needed
 
 ❌ Avoid when:
-1. Simple request-response works
-2. SSE is sufficient (server push only)
 
-📊 Use Cases
-1. 💬 Chat applications
-2. 🎮 Real-time multiplayer games
-3. 📈 Live dashboards (stocks, analytics)
-4. 🔔 Notifications & alerts
-5. 🤝 Collaborative tools
+* Simple request-response is enough
+* Server push only (SSE is sufficient)
 
-⚠️ Limitations
-1. No authentication implemented
-2. No message persistence(no db) (in-memory only)
-3. Not optimized for horizontal scaling (single server) 
+---
 
-🚀 Future Improvements
-1. Add usernames & user sessions
-2. Private messaging support
-3. Store messages in database
-4. Scale using Redis Pub/Sub
-5. Build React frontend
+## 📊 Use Cases
 
-🧠 Learnings
-1. Understanding of WebSocket handshake & upgrade mechanism
-2. Difference between HTTP, SSE, and WebSockets
-3. Handling real-time communication in Node.js
-4. Managing multiple client connections
+* 💬 Chat applications
+* 🎮 Multiplayer games
+* 📈 Live dashboards
+* 🔔 Notifications systems
+* 🤝 Collaborative tools
 
-📢 Author
+---
 
-Aastha Awasthi
+## ⚠️ Limitations
 
+* ❌ No authentication implemented
+* ❌ No message persistence (in-memory + Redis only)
+* ❌ No sticky sessions (may affect some use cases)
+* ❌ Not fully production hardened
+
+---
+
+## 🚀 Future Improvements
+
+* 🔐 Add authentication (JWT)
+* 🧑‍🤝‍🧑 User sessions & identities
+* 💌 Private messaging / chat rooms
+* 🗄️ Message persistence (DB)
+* 🔁 Reconnection + message replay
+* 📊 Load testing (k6 / Artillery)
+* ⚛️ React frontend
+
+---
+
+## 🧠 Key Learnings
+
+* WebSocket handshake & protocol upgrade
+* Persistent vs stateless communication
+* Horizontal scaling of WebSocket servers
+* Load balancing using NGINX
+* Redis Pub/Sub for cross-server messaging
+* Real-world system design patterns
+
+---
+
+## 📢 Author
+
+**Aastha Awasthi**
 Software Engineer | Full Stack Developer
 Passionate about system design & real-time architectures
 
-⭐ If you found this useful
+---
 
-Give this repo a ⭐ and share your feedback!
+## ⭐ Show Your Support
+
+If you found this project useful, give it a ⭐ and share your feedback!
